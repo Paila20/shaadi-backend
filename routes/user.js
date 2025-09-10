@@ -119,15 +119,31 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 });
+// router.put("/:id", async (req, res) => {
+//   try {
+//     const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+//     res.json(updatedUser);
+//   } catch (err) {
+//     res.status(500).json({ msg: "Server error", error: err.message });
+//   }
+// });
+
 router.put("/:id", async (req, res) => {
   try {
-    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    // Copy body
+    const updateData = { ...req.body };
+
+    // If image exists and is an object, convert to string URL
+    if (updateData.image && typeof updateData.image === "object") {
+      updateData.image = updateData.image.secure_url || updateData.image.uri || "";
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, updateData, { new: true });
     res.json(updatedUser);
   } catch (err) {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 });
-
 
 
 export default router;
