@@ -119,130 +119,15 @@ router.get("/:id", async (req, res) => {
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 });
-
-/**
- * ✅ Update User Profile (with image upload)
- * PUT /api/users/:id
- */
-// router.put("/:id", upload.single("image"), async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Collect update data
-//     let updateData = { ...req.body };
-
-//     // ✅ Save only Cloudinary URL, not the whole object
-//     if (req.file) {
-//       updateData.image =
-//         req.file.path || req.file.secure_url || req.file.url;
-//     }
-
-//     // ✅ Parse JSON fields if frontend sends them as strings
-//     Object.keys(updateData).forEach((key) => {
-//       try {
-//         updateData[key] = JSON.parse(updateData[key]);
-//       } catch (err) {
-//         // leave as string if not JSON
-//       }
-//     });
-
-//     // ✅ Update user
-//     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
-//       new: true,
-//     });
-
-//     if (!updatedUser) {
-//       return res.status(404).json({ msg: "User not found" });
-//     }
-
-//     res.json(updatedUser);
-//   } catch (error) {
-//     console.error("❌ Update error:", error);
-//     res.status(500).json({ msg: "Server error", error: error.message });
-//   }
-// });
-
-
-
-// router.put("/:id", upload.single("image"), async (req, res) => {
-//   try {
-//     const { id } = req.params;
-
-//     // Start with request body
-//     let updateData = { ...req.body };
-
-//     // ✅ If Cloudinary uploaded file → save only `secure_url`
-//     if (req.file && req.file.path) {
-//       updateData.image = req.file.path; // Multer gives URL here
-//     } else if (req.file && req.file.secure_url) {
-//       updateData.image = req.file.secure_url; // Cloudinary response
-//     }
-
-//     // ✅ Prevent saving "[object Object]" by forcing string
-//     if (updateData.image && typeof updateData.image !== "string") {
-//       updateData.image = String(updateData.image);
-//     }
-
-//     // Parse JSON safely (for arrays/objects sent as strings)
-//     Object.keys(updateData).forEach((key) => {
-//       try {
-//         updateData[key] = JSON.parse(updateData[key]);
-//       } catch {
-//         // ignore if not JSON
-//       }
-//     });
-
-//     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
-//       new: true,
-//     });
-
-//     if (!updatedUser) {
-//       return res.status(404).json({ msg: "User not found" });
-//     }
-
-//     res.json(updatedUser);
-//   } catch (error) {
-//     console.error("❌ Update error:", error);
-//     res.status(500).json({ msg: "Server error", error: error.message });
-//   }
-// });
-
-router.put("/:id", upload.single("image"), async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
-    const { id } = req.params;
-
-    let updateData = { ...req.body };
-
-    // 1️⃣ Handle uploaded image from Multer/Cloudinary
-    if (req.file) {
-      // Multer CloudinaryStorage usually returns .path
-      updateData.image = req.file.path || req.file.secure_url;
-    }
-
-    // 2️⃣ Only parse JSON for non-image fields
-    Object.keys(updateData).forEach((key) => {
-      if (key === "image") return; // skip image
-      try {
-        updateData[key] = JSON.parse(updateData[key]);
-      } catch {
-        // leave as string
-      }
-    });
-
-    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
-
-    if (!updatedUser) {
-      return res.status(404).json({ msg: "User not found" });
-    }
-
+    const updatedUser = await User.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json(updatedUser);
-  } catch (error) {
-    console.error("❌ Update error:", error);
-    res.status(500).json({ msg: "Server error", error: error.message });
+  } catch (err) {
+    res.status(500).json({ msg: "Server error", error: err.message });
   }
 });
+
 
 
 export default router;
