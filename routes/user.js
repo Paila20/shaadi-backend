@@ -124,29 +124,74 @@ router.get("/:id", async (req, res) => {
  * ✅ Update User Profile (with image upload)
  * PUT /api/users/:id
  */
+// router.put("/:id", upload.single("image"), async (req, res) => {
+//   try {
+//     const { id } = req.params;
+
+//     // Collect update data
+//     let updateData = { ...req.body };
+
+//     // ✅ Save only Cloudinary URL, not the whole object
+//     if (req.file) {
+//       updateData.image =
+//         req.file.path || req.file.secure_url || req.file.url;
+//     }
+
+//     // ✅ Parse JSON fields if frontend sends them as strings
+//     Object.keys(updateData).forEach((key) => {
+//       try {
+//         updateData[key] = JSON.parse(updateData[key]);
+//       } catch (err) {
+//         // leave as string if not JSON
+//       }
+//     });
+
+//     // ✅ Update user
+//     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+//       new: true,
+//     });
+
+//     if (!updatedUser) {
+//       return res.status(404).json({ msg: "User not found" });
+//     }
+
+//     res.json(updatedUser);
+//   } catch (error) {
+//     console.error("❌ Update error:", error);
+//     res.status(500).json({ msg: "Server error", error: error.message });
+//   }
+// });
+
+
+
 router.put("/:id", upload.single("image"), async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Collect update data
+    // Start with request body
     let updateData = { ...req.body };
 
-    // ✅ Save only Cloudinary URL, not the whole object
-    if (req.file) {
-      updateData.image =
-        req.file.path || req.file.secure_url || req.file.url;
+    // ✅ If Cloudinary uploaded file → save only `secure_url`
+    if (req.file && req.file.path) {
+      updateData.image = req.file.path; // Multer gives URL here
+    } else if (req.file && req.file.secure_url) {
+      updateData.image = req.file.secure_url; // Cloudinary response
     }
 
-    // ✅ Parse JSON fields if frontend sends them as strings
+    // ✅ Prevent saving "[object Object]" by forcing string
+    if (updateData.image && typeof updateData.image !== "string") {
+      updateData.image = String(updateData.image);
+    }
+
+    // Parse JSON safely (for arrays/objects sent as strings)
     Object.keys(updateData).forEach((key) => {
       try {
         updateData[key] = JSON.parse(updateData[key]);
-      } catch (err) {
-        // leave as string if not JSON
+      } catch {
+        // ignore if not JSON
       }
     });
 
-    // ✅ Update user
     const updatedUser = await User.findByIdAndUpdate(id, updateData, {
       new: true,
     });
