@@ -187,7 +187,7 @@ router.post("/send/:fromId/:toId", async (req, res) => {
 /**
  * 🔹 Accept Request
  */
-router.post("/accept/:userId/:fromId", async (req, res) => {
+router.post("/accept", async (req, res) => {
   try {
     const { userId, fromId } = req.params;
 
