@@ -189,7 +189,7 @@ router.post("/send/:fromId/:toId", async (req, res) => {
  */
 router.post("/accept", async (req, res) => {
   try {
-    const { userId, fromId } = req.params;
+    const { userId, fromId } = req.body;
 
     await User.findByIdAndUpdate(userId, {
       $pull: { receivedRequests: fromId },
