@@ -6,29 +6,26 @@ import User from "../models/User.js";
 
 const router = express.Router();
 
-/**
- * 🔹 Get Matches (opposite gender + filters)
- * GET /api/matches/:userId
- */
+
+
+
 // router.get("/:userId", async (req, res) => {
 //   try {
 //     const { userId } = req.params;
 //     const { religion, community, maritalStatus, ageMin, ageMax, page = 1, limit = 10 } = req.query;
 
-//     // 1️⃣ Find logged-in user
 //     const currentUser = await User.findById(userId);
 //     if (!currentUser) {
 //       return res.status(404).json({ success: false, message: "User not found" });
 //     }
 
-//     // 2️⃣ Build filters
+//     // Build filters
 //     const filters = {};
 
-//     // opposite gender
+//     // Opposite gender filter
 //     if (currentUser.gender === "Male") filters.gender = "Female";
 //     else if (currentUser.gender === "Female") filters.gender = "Male";
 
-//     // other filters
 //     if (religion) filters.religion = religion;
 //     if (community) filters.community = community;
 //     if (maritalStatus) filters.maritalStatus = maritalStatus;
@@ -46,18 +43,28 @@ const router = express.Router();
 //       }
 //     }
 
-//     // exclude yourself from matches
+//     // ✅ Exclude yourself
 //     filters._id = { $ne: userId };
 
-//     // 3️⃣ Pagination
+//     // ✅ Exclude users already in sentRequests, receivedRequests, or acceptedRequests
+//     const excludeIds = [
+//       ...currentUser.sentRequests,
+//       ...currentUser.receivedRequests,
+//       ...currentUser.acceptedRequests,
+//     ];
+
+//     if (excludeIds.length > 0) {
+//       filters._id = { $nin: [...excludeIds, userId] };
+//     }
+
+//     // Pagination
 //     const skip = (page - 1) * limit;
 
-//     // 4️⃣ Query
 //     const total = await User.countDocuments(filters);
 //     const matches = await User.find(filters)
 //       .skip(skip)
 //       .limit(+limit)
-//       .select("name gender dob religion community profession location image"); // include image
+//       .select("name gender dob religion community profession location image");
 
 //     res.json({
 //       success: true,
@@ -75,17 +82,16 @@ const router = express.Router();
 router.get("/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
-    const { religion, community, maritalStatus, ageMin, ageMax, page = 1, limit = 10 } = req.query;
+    const { religion, community, maritalStatus, age, page = 1, limit = 10 } = req.query;
 
     const currentUser = await User.findById(userId);
     if (!currentUser) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Build filters
     const filters = {};
 
-    // Opposite gender filter
+    // ✅ Opposite gender filter
     if (currentUser.gender === "Male") filters.gender = "Female";
     else if (currentUser.gender === "Female") filters.gender = "Male";
 
@@ -93,18 +99,8 @@ router.get("/:userId", async (req, res) => {
     if (community) filters.community = community;
     if (maritalStatus) filters.maritalStatus = maritalStatus;
 
-    if (ageMin || ageMax) {
-      filters.dob = {};
-      const today = new Date();
-      if (ageMin) {
-        const maxDob = new Date(today.setFullYear(today.getFullYear() - ageMin));
-        filters.dob.$lte = maxDob;
-      }
-      if (ageMax) {
-        const minDob = new Date(today.setFullYear(today.getFullYear() - ageMax));
-        filters.dob.$gte = minDob;
-      }
-    }
+    // ✅ Filter by exact age if provided
+    if (age) filters.age = Number(age);
 
     // ✅ Exclude yourself
     filters._id = { $ne: userId };
@@ -127,7 +123,7 @@ router.get("/:userId", async (req, res) => {
     const matches = await User.find(filters)
       .skip(skip)
       .limit(+limit)
-      .select("name gender dob religion community profession location image");
+      .select("name gender age religion community profession location image");
 
     res.json({
       success: true,
