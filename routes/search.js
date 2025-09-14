@@ -80,8 +80,8 @@ const router = express.Router();
 router.post("/", async (req, res) => {
   try {
     const {
-      ageRange,
-      heightRange,
+      age,
+      height,
       religion,
       community,
       maritalStatus,
