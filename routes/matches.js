@@ -9,75 +9,6 @@ const router = express.Router();
 
 
 
-// router.get("/:userId", async (req, res) => {
-//   try {
-//     const { userId } = req.params;
-//     const { religion, community, maritalStatus, ageMin, ageMax, page = 1, limit = 10 } = req.query;
-
-//     const currentUser = await User.findById(userId);
-//     if (!currentUser) {
-//       return res.status(404).json({ success: false, message: "User not found" });
-//     }
-
-//     // Build filters
-//     const filters = {};
-
-//     // Opposite gender filter
-//     if (currentUser.gender === "Male") filters.gender = "Female";
-//     else if (currentUser.gender === "Female") filters.gender = "Male";
-
-//     if (religion) filters.religion = religion;
-//     if (community) filters.community = community;
-//     if (maritalStatus) filters.maritalStatus = maritalStatus;
-
-//     if (ageMin || ageMax) {
-//       filters.dob = {};
-//       const today = new Date();
-//       if (ageMin) {
-//         const maxDob = new Date(today.setFullYear(today.getFullYear() - ageMin));
-//         filters.dob.$lte = maxDob;
-//       }
-//       if (ageMax) {
-//         const minDob = new Date(today.setFullYear(today.getFullYear() - ageMax));
-//         filters.dob.$gte = minDob;
-//       }
-//     }
-
-//     // ✅ Exclude yourself
-//     filters._id = { $ne: userId };
-
-//     // ✅ Exclude users already in sentRequests, receivedRequests, or acceptedRequests
-//     const excludeIds = [
-//       ...currentUser.sentRequests,
-//       ...currentUser.receivedRequests,
-//       ...currentUser.acceptedRequests,
-//     ];
-
-//     if (excludeIds.length > 0) {
-//       filters._id = { $nin: [...excludeIds, userId] };
-//     }
-
-//     // Pagination
-//     const skip = (page - 1) * limit;
-
-//     const total = await User.countDocuments(filters);
-//     const matches = await User.find(filters)
-//       .skip(skip)
-//       .limit(+limit)
-//       .select("name gender dob religion community profession location image");
-
-//     res.json({
-//       success: true,
-//       matches,
-//       total,
-//       totalPages: Math.ceil(total / limit),
-//     });
-//   } catch (err) {
-//     res.status(500).json({ success: false, message: err.message });
-//   }
-// });
-
-
 
 router.get("/:userId", async (req, res) => {
   try {
@@ -211,7 +142,7 @@ router.get("/received/:userId", async (req, res) => {
     const { userId } = req.params;
     const user = await User.findById(userId).populate(
       "receivedRequests",
-      "name gender dob religion community profession location image"
+      "name gender age religion community profession location image"
     );
     res.json({ success: true, received: user.receivedRequests });
   } catch (err) {
@@ -227,7 +158,7 @@ router.get("/sent/:userId", async (req, res) => {
     const { userId } = req.params;
     const user = await User.findById(userId).populate(
       "sentRequests",
-      "name gender dob religion community profession location image"
+      "name gender age religion community profession location image"
     );
     res.json({ success: true, sent: user.sentRequests });
   } catch (err) {
@@ -243,7 +174,7 @@ router.get("/accepted/:userId", async (req, res) => {
     const { userId } = req.params;
     const user = await User.findById(userId).populate(
       "acceptedRequests",
-      "name gender dob religion community profession location image"
+      "name gender age religion community profession location image"
     );
     res.json({ success: true, accepted: user.acceptedRequests });
   } catch (err) {
