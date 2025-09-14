@@ -97,19 +97,27 @@ router.post("/", async (req, res) => {
 
     const query = {};
 
+    if (age) {
+      query.age = age;
+    }
+
+    if (height) {
+      query.height = height;
+    }
+
     // Gender filter
     if (gender) {
       query.gender = gender;
     }
 
     // Age range filter
-    if (ageRange?.length === 2) {
-      const minDob = new Date();
-      minDob.setFullYear(minDob.getFullYear() - ageRange[1]);
-      const maxDob = new Date();
-      maxDob.setFullYear(maxDob.getFullYear() - ageRange[0]);
-      query.dob = { $gte: minDob, $lte: maxDob };
-    }
+    // if (ageRange?.length === 2) {
+    //   const minDob = new Date();
+    //   minDob.setFullYear(minDob.getFullYear() - ageRange[1]);
+    //   const maxDob = new Date();
+    //   maxDob.setFullYear(maxDob.getFullYear() - ageRange[0]);
+    //   query.dob = { $gte: minDob, $lte: maxDob };
+    // }
 
     // Height filter
     if (heightRange?.length === 2) {
