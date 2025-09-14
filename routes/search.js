@@ -120,9 +120,9 @@ router.post("/", async (req, res) => {
     // }
 
     // Height filter
-    if (heightRange?.length === 2) {
-      query.height = { $gte: heightRange[0], $lte: heightRange[1] };
-    }
+    // if (heightRange?.length === 2) {
+    //   query.height = { $gte: heightRange[0], $lte: heightRange[1] };
+    // }
 
     // Other filters
     if (religion?.length) query.religion = { $in: religion };
