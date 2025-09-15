@@ -37,30 +37,32 @@ router.post("/send", async (req, res) => {
   }
 });
 
+
 router.get("/users/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Validate userId
+    // ✅ Validate and cast userId to ObjectId
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({ success: false, message: "Invalid userId" });
     }
+    const userObjectId = new mongoose.Types.ObjectId(userId);
 
-    // Find all chats where current user is sender or receiver
+    // ✅ Find all chats where user is sender or receiver
     const chats = await Chat.find({
-      $or: [{ from: userId }, { to: userId }],
+      $or: [{ from: userObjectId }, { to: userObjectId }],
     }).sort({ createdAt: -1 });
 
     if (!chats.length) {
       return res.json({ success: true, users: [] });
     }
 
-    // Map unique chat partners with last message
+    // ✅ Map unique chat partners with last message
     const userMap = {};
     chats.forEach((chat) => {
       const otherUserId =
         chat.from.toString() === userId ? chat.to : chat.from;
-      const key = otherUserId.toString(); // convert to string for map key
+      const key = otherUserId.toString();
       if (!userMap[key]) {
         userMap[key] = {
           userId: otherUserId,
@@ -69,7 +71,6 @@ router.get("/users/:userId", async (req, res) => {
       }
     });
 
-    // Convert keys back to ObjectId for querying
     const uniqueUserIds = Object.values(userMap).map((u) =>
       new mongoose.Types.ObjectId(u.userId)
     );
@@ -91,6 +92,5 @@ router.get("/users/:userId", async (req, res) => {
     res.status(500).json({ success: false, message: "Server error" });
   }
 });
-
 
 export default router;
