@@ -3,6 +3,55 @@ import Message from "../models/Message.js";
 
 const router = express.Router();
 
+router.get("/users/:userId", async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ success: false, message: "Invalid userId" });
+    }
+
+    const objectUserId = new mongoose.Types.ObjectId(userId);
+
+    // Find all messages where this user is sender or receiver
+    const chats = await Message.find({
+      $or: [{ from: objectUserId }, { to: objectUserId }],
+    }).sort({ createdAt: -1 });
+
+    if (!chats.length) {
+      return res.json({ success: true, users: [] }); // no chat partners yet
+    }
+
+    const userMap = {};
+    chats.forEach((chat) => {
+      const otherUserId =
+        chat.from.toString() === userId ? chat.to.toString() : chat.from.toString();
+
+      if (!userMap[otherUserId]) {
+        userMap[otherUserId] = chat; // store latest message
+      }
+    });
+
+    const otherUserIds = Object.keys(userMap);
+    const users = await User.find({ _id: { $in: otherUserIds } });
+
+    const result = users.map((u) => ({
+      _id: u._id,
+      name: u.name,
+      image: u.image,
+      gender: u.gender,
+      isOnline: u.isOnline || false,
+      lastMessage: userMap[u._id.toString()],
+    }));
+
+    res.json({ success: true, users: result });
+  } catch (err) {
+    console.error("❌ Error fetching chat users:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
 // Get chat messages between two users
 router.get("/:userId/:chatWithId", async (req, res) => {
   try {
