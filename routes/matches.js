@@ -182,4 +182,60 @@ router.get("/accepted/:userId", async (req, res) => {
   }
 });
 
+
+/**
+ * 🔹 Decline Request (Remove from receivedRequests)
+ */
+router.post("/decline", async (req, res) => {
+  try {
+    const { userId, fromId } = req.body;
+
+    if (!userId || !fromId) {
+      return res.status(400).json({ success: false, message: "userId and fromId are required" });
+    }
+
+    // Remove from current user's receivedRequests
+    await User.findByIdAndUpdate(userId, {
+      $pull: { receivedRequests: fromId },
+    });
+
+    // Also remove from sender's sentRequests
+    await User.findByIdAndUpdate(fromId, {
+      $pull: { sentRequests: userId },
+    });
+
+    res.json({ success: true, message: "Request declined" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+/**
+ * 🔹 Cancel Sent Request (Remove from sentRequests)
+ */
+router.post("/cancel", async (req, res) => {
+  try {
+    const { userId, toId } = req.body;
+
+    if (!userId || !toId) {
+      return res.status(400).json({ success: false, message: "userId and toId are required" });
+    }
+
+    // Remove from current user's sentRequests
+    await User.findByIdAndUpdate(userId, {
+      $pull: { sentRequests: toId },
+    });
+
+    // Also remove from receiver's receivedRequests
+    await User.findByIdAndUpdate(toId, {
+      $pull: { receivedRequests: userId },
+    });
+
+    res.json({ success: true, message: "Request canceled" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+});
+
+
 export default router;
