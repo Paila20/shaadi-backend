@@ -191,10 +191,42 @@ router.patch("/:id", async (req, res) => {
 });
 
 
+// router.patch("/:id/preferences", async (req, res) => {
+//   try {
+//     const user = await User.findById(req.params.id);
+//     if (!user) return res.status(404).json({ msg: "User not found" });
+
+//     const fields = [
+//       "ageRange", "heightRange", "religion", "community",
+//       "motherTongue", "maritalStatus", "location",
+//       "education", "profession", "diet", "profileManagedBy", "hobbies"
+//     ];
+
+//     fields.forEach((field) => {
+//       if (req.body[field] !== undefined) {
+//         user.partnerPreferences[field] = req.body[field];
+//       }
+//     });
+
+//     await user.save();
+//     res.json(user.partnerPreferences);
+//   } catch (err) {
+//     console.error("Error updating partner preferences:", err);
+//     res.status(500).json({ msg: "Server error", error: err.message });
+//   }
+// });
+
+
+
+
 router.patch("/:id/preferences", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ msg: "User not found" });
+
+    if (!user.partnerPreferences) user.partnerPreferences = {};
+
+    const sanitizeArray = (arr) => Array.isArray(arr) ? arr.filter(item => item) : [];
 
     const fields = [
       "ageRange", "heightRange", "religion", "community",
@@ -204,7 +236,11 @@ router.patch("/:id/preferences", async (req, res) => {
 
     fields.forEach((field) => {
       if (req.body[field] !== undefined) {
-        user.partnerPreferences[field] = req.body[field];
+        if (["religion","community","motherTongue","maritalStatus","education","profession","diet","profileManagedBy","hobbies"].includes(field)) {
+          user.partnerPreferences[field] = sanitizeArray(req.body[field]);
+        } else {
+          user.partnerPreferences[field] = req.body[field];
+        }
       }
     });
 
@@ -216,31 +252,6 @@ router.patch("/:id/preferences", async (req, res) => {
   }
 });
 
-
-/**
- * ✅ Update Partner Preferences
- * PATCH /api/users/:id/preferences
-//  */
-// router.patch("/:id/preferences", async (req, res) => {
-//   try {
-//     const user = await User.findById(req.params.id);
-//     if (!user) return res.status(404).json({ msg: "User not found" });
-
-//     // Merge new preferences into existing ones
-//     user.partnerPreferences = { ...user.partnerPreferences.toObject(), ...req.body };
-//     await user.save();
-
-//     res.json(user.partnerPreferences);
-//   } catch (err) {
-//     console.error("Error updating partner preferences:", err);
-//     res.status(500).json({ msg: "Server error", error: err.message });
-//   }
-// });
-
-/**
- * ✅ Upload Profile Photo
- * POST /api/users/:id/photo
- */
 router.post("/:id/photo", upload.single("image"), async (req, res) => {
   try {
     const user = await User.findByIdAndUpdate(
