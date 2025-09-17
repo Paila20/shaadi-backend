@@ -218,7 +218,6 @@ router.patch("/:id", async (req, res) => {
 
 
 
-
 router.patch("/:id/preferences", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -228,23 +227,30 @@ router.patch("/:id/preferences", async (req, res) => {
 
     const sanitizeArray = (arr) => Array.isArray(arr) ? arr.filter(item => item) : [];
 
-    const fields = [
-      "ageRange", "heightRange", "religion", "community",
-      "motherTongue", "maritalStatus", "location",
-      "education", "profession", "diet", "profileManagedBy", "hobbies"
-    ];
+    // Fields that are stored as arrays of strings
+    const arrayFields = ["religion","community","motherTongue","maritalStatus","education","profession","diet","profileManagedBy","hobbies"];
 
-    fields.forEach((field) => {
-      if (req.body[field] !== undefined) {
-        if (["religion","community","motherTongue","maritalStatus","education","profession","diet","profileManagedBy","hobbies"].includes(field)) {
-          user.partnerPreferences[field] = sanitizeArray(req.body[field]);
-        } else {
-          user.partnerPreferences[field] = req.body[field];
+    // Process each field
+    Object.keys(req.body).forEach((field) => {
+      if (arrayFields.includes(field)) {
+        user.partnerPreferences[field] = sanitizeArray(req.body[field]);
+      } else if (["ageRange","heightRange","annualIncomeRange"].includes(field)) {
+        // Ensure min/max objects are correctly stored
+        const val = req.body[field];
+        if (Array.isArray(val) && val.length === 2) {
+          user.partnerPreferences[field] = { min: val[0], max: val[1] };
+        } else if (val && typeof val === "object" && "min" in val && "max" in val) {
+          user.partnerPreferences[field] = val;
         }
+      } else if (field === "location") {
+        user.partnerPreferences.location = req.body.location || {};
+      } else {
+        user.partnerPreferences[field] = req.body[field];
       }
     });
 
     await user.save();
+    console.log("Updated partnerPreferences:", user.partnerPreferences); // ✅ debug
     res.json(user.partnerPreferences);
   } catch (err) {
     console.error("Error updating partner preferences:", err);
