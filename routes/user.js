@@ -218,6 +218,47 @@ router.patch("/:id", async (req, res) => {
 
 
 
+// router.patch("/:id/preferences", async (req, res) => {
+//   try {
+//     const user = await User.findById(req.params.id);
+//     if (!user) return res.status(404).json({ msg: "User not found" });
+
+//     if (!user.partnerPreferences) user.partnerPreferences = {};
+
+//     const sanitizeArray = (arr) => Array.isArray(arr) ? arr.filter(item => item) : [];
+
+//     // Fields that are stored as arrays of strings
+//     const arrayFields = ["religion","community","motherTongue","maritalStatus","education","profession","diet","profileManagedBy","hobbies"];
+
+//     // Process each field
+//     Object.keys(req.body).forEach((field) => {
+//       if (arrayFields.includes(field)) {
+//         user.partnerPreferences[field] = sanitizeArray(req.body[field]);
+//       } else if (["ageRange","heightRange","annualIncomeRange"].includes(field)) {
+//         // Ensure min/max objects are correctly stored
+//         const val = req.body[field];
+//         if (Array.isArray(val) && val.length === 2) {
+//           user.partnerPreferences[field] = { min: val[0], max: val[1] };
+//         } else if (val && typeof val === "object" && "min" in val && "max" in val) {
+//           user.partnerPreferences[field] = val;
+//         }
+//       } else if (field === "location") {
+//         user.partnerPreferences.location = req.body.location || {};
+//       } else {
+//         user.partnerPreferences[field] = req.body[field];
+//       }
+//     });
+
+//     await user.save();
+//     console.log("Updated partnerPreferences:", user.partnerPreferences); // ✅ debug
+//     res.json(user.partnerPreferences);
+//   } catch (err) {
+//     console.error("Error updating partner preferences:", err);
+//     res.status(500).json({ msg: "Server error", error: err.message });
+//   }
+// });
+
+
 router.patch("/:id/preferences", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -227,36 +268,54 @@ router.patch("/:id/preferences", async (req, res) => {
 
     const sanitizeArray = (arr) => Array.isArray(arr) ? arr.filter(item => item) : [];
 
-    // Fields that are stored as arrays of strings
-    const arrayFields = ["religion","community","motherTongue","maritalStatus","education","profession","diet","profileManagedBy","hobbies"];
+    // ✅ Allowed Enums
+    const allowedEnums = {
+      maritalStatus: ["Never Married", "Divorced", "Widowed", "Separated"],
+      education: ["High School", "Diploma", "B.Tech", "M.Tech", "MBA", "B.Sc", "M.Sc", "PhD", "Other"],
+      profession: [
+        "Software Engineer", "Doctor", "Teacher", "Business", "Lawyer",
+        "Government Service", "Freelancer", "Other"
+      ],
+      diet: ["Veg", "Non-Veg", "Vegan", "Eggetarian", "Other"],
+      profileManagedBy: ["Self", "Parents", "Sibling", "Friend", "Other"],
+      hobbies: [
+        "Reading", "Traveling", "Cooking", "Sports", "Music",
+        "Movies", "Photography", "Dancing", "Gaming", "Other"
+      ]
+    };
 
-    // Process each field
-    Object.keys(req.body).forEach((field) => {
-      if (arrayFields.includes(field)) {
-        user.partnerPreferences[field] = sanitizeArray(req.body[field]);
-      } else if (["ageRange","heightRange","annualIncomeRange"].includes(field)) {
-        // Ensure min/max objects are correctly stored
-        const val = req.body[field];
-        if (Array.isArray(val) && val.length === 2) {
-          user.partnerPreferences[field] = { min: val[0], max: val[1] };
-        } else if (val && typeof val === "object" && "min" in val && "max" in val) {
-          user.partnerPreferences[field] = val;
+    const fields = [
+      "ageRange", "heightRange", "religion", "community",
+      "motherTongue", "maritalStatus", "location",
+      "education", "profession", "diet", "profileManagedBy", "hobbies"
+    ];
+
+    fields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        if (Array.isArray(req.body[field])) {
+          const cleanArray = sanitizeArray(req.body[field]).filter(item => {
+            if (allowedEnums[field]) {
+              const isValid = allowedEnums[field].includes(item);
+              if (!isValid) console.warn(`❌ Rejected ${field} value: ${item}`);
+              return isValid;
+            }
+            return true; // no enum restriction
+          });
+          user.partnerPreferences[field] = cleanArray;
+        } else {
+          user.partnerPreferences[field] = req.body[field];
         }
-      } else if (field === "location") {
-        user.partnerPreferences.location = req.body.location || {};
-      } else {
-        user.partnerPreferences[field] = req.body[field];
       }
     });
 
     await user.save();
-    console.log("Updated partnerPreferences:", user.partnerPreferences); // ✅ debug
     res.json(user.partnerPreferences);
   } catch (err) {
-    console.error("Error updating partner preferences:", err);
+    console.error("🔥 Error updating partner preferences:", err);
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 });
+
 
 router.post("/:id/photo", upload.single("image"), async (req, res) => {
   try {
