@@ -190,25 +190,52 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
-/**
- * ✅ Update Partner Preferences
- * PATCH /api/users/:id/preferences
- */
+
 router.patch("/:id/preferences", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     if (!user) return res.status(404).json({ msg: "User not found" });
 
-    // Merge new preferences into existing ones
-    user.partnerPreferences = { ...user.partnerPreferences.toObject(), ...req.body };
-    await user.save();
+    const fields = [
+      "ageRange", "heightRange", "religion", "community",
+      "motherTongue", "maritalStatus", "location",
+      "education", "profession", "diet", "profileManagedBy", "hobbies"
+    ];
 
+    fields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        user.partnerPreferences[field] = req.body[field];
+      }
+    });
+
+    await user.save();
     res.json(user.partnerPreferences);
   } catch (err) {
     console.error("Error updating partner preferences:", err);
     res.status(500).json({ msg: "Server error", error: err.message });
   }
 });
+
+
+/**
+ * ✅ Update Partner Preferences
+ * PATCH /api/users/:id/preferences
+//  */
+// router.patch("/:id/preferences", async (req, res) => {
+//   try {
+//     const user = await User.findById(req.params.id);
+//     if (!user) return res.status(404).json({ msg: "User not found" });
+
+//     // Merge new preferences into existing ones
+//     user.partnerPreferences = { ...user.partnerPreferences.toObject(), ...req.body };
+//     await user.save();
+
+//     res.json(user.partnerPreferences);
+//   } catch (err) {
+//     console.error("Error updating partner preferences:", err);
+//     res.status(500).json({ msg: "Server error", error: err.message });
+//   }
+// });
 
 /**
  * ✅ Upload Profile Photo
