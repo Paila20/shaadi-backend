@@ -13,7 +13,9 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+
+app.use(cors({ origin: "https://fancy-lebkuchen-dd3e41.netlify.app/" }));
 app.use(express.json());
 
 // Routes
