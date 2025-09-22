@@ -107,10 +107,10 @@ router.post("/forgot-password", async (req, res) => {
     });
 
     // Use environment variable for frontend URL (works in production)
-    // const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
-    // const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3000";
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
     // Instead of localhost or web URL
-const resetUrl = `myfirstexpoapp://reset-password/${resetToken}`;
+// const resetUrl = `myfirstexpoapp://reset-password/${resetToken}`;
 
 
     await transporter.sendMail({
