@@ -19,7 +19,7 @@ const app = express();
 
 const allowedOrigins = [
   "http://localhost:8081", // for your local React Native/Frontend
-  "https://fancy-lebkuchen-dd3e41.netlify.app", // production site
+  "https://shaadi-frontend-reset-password.vercel.app/", // production site
 ];
 
 app.use(
