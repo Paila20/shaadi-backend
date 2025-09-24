@@ -275,7 +275,7 @@ router.post("/forgot-password", async (req, res) => {
       .request({
         Messages: [
           {
-            From: { Email: process.env.MJ_SENDER_EMAIL, Name: "Shaadi App" },
+            From: { Email: process.env.MJ_SENDER_EMAIL, Name: "Default" },
             To: [{ Email: user.email, Name: user.name }],
             Subject: "Password Reset Request",
             HTMLPart: `
